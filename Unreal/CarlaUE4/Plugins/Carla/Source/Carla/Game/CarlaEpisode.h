@@ -53,6 +53,12 @@ public:
     return MapName;
   }
 
+  /// Game seconds since the start of this episode.
+  double GetElapsedGameTime() const
+  {
+    return ElapsedGameTime;
+  }
+
   /// Return the list of actor definitions that are available to be spawned this
   /// episode.
   UFUNCTION(BlueprintCallable)
@@ -83,10 +89,10 @@ public:
     return Weather;
   }
 
-  const AWorldObserver *GetWorldObserver() const
-  {
-    return WorldObserver;
-  }
+  // const AWorldObserver *GetWorldObserver() const
+  // {
+  //   return WorldObserver;
+  // }
 
   const FActorRegistry &GetActorRegistry() const
   {
@@ -189,6 +195,7 @@ public:
 private:
 
   friend class ATheNewCarlaGameModeBase;
+  friend class FCarlaEngine;
 
   void InitializeAtBeginPlay();
 
@@ -197,10 +204,17 @@ private:
     ActorDispatcher->Bind(ActorFactory);
   }
 
+  void TickTimers(float DeltaSeconds)
+  {
+    ElapsedGameTime += DeltaSeconds;
+  }
+
   const uint32 Id = 0u;
 
   UPROPERTY(VisibleAnywhere)
   FString MapName;
+
+  double ElapsedGameTime = 0.0;
 
   UPROPERTY(VisibleAnywhere)
   UActorDispatcher *ActorDispatcher = nullptr;
@@ -211,6 +225,5 @@ private:
   UPROPERTY(VisibleAnywhere)
   AWeather *Weather = nullptr;
 
-  UPROPERTY(VisibleAnywhere)
-  AWorldObserver *WorldObserver = nullptr;
+  // FWorldObserver *WorldObserver = nullptr;
 };

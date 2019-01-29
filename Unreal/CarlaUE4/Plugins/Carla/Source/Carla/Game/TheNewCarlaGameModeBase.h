@@ -34,6 +34,10 @@ public:
     return *Episode;
   }
 
+  void OnPreTick(ELevelTick, float);
+
+  void OnPostTick(UWorld*, ELevelTick, float);
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
@@ -43,8 +47,6 @@ protected:
   void BeginPlay() override;
 
   void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
-  void Tick(float DeltaSeconds) override;
 
 private:
 

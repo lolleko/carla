@@ -97,6 +97,7 @@ try:
     from pygame.locals import K_a
     from pygame.locals import K_c
     from pygame.locals import K_d
+    from pygame.locals import K_f
     from pygame.locals import K_h
     from pygame.locals import K_m
     from pygame.locals import K_p
@@ -253,6 +254,25 @@ class KeyboardControl(object):
                     world.camera_manager.set_sensor(event.key - 1 - K_0)
                 elif event.key == K_r:
                     world.camera_manager.toggle_recording()
+                elif event.key == K_f:
+                    bp = random.choice(world.world.get_blueprint_library().filter('static.*'))
+                    tr = world.player.get_transform()
+                    fv = tr.get_forward_vector()
+                    fv.x *= 4.0
+                    fv.y *= 4.0
+                    fv.z *= 4.0
+                    tr.location.x += fv.x
+                    tr.location.y += fv.y
+                    tr.location.z += fv.z + 0.5
+                    tr.rotation.yaw = random.random() * 360
+                    tr.rotation.pitch = random.random() * 360
+                    tr.rotation.roll = random.random() * 360
+                    a = world.world.spawn_actor(bp, tr)
+                    a.set_simulate_physics(True)
+                    fv.x *= 20.0
+                    fv.y *= 20.0
+                    fv.z *= 20.0
+                    a.set_velocity(fv)
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
                         self._control.gear = 1 if self._control.reverse else -1
@@ -611,7 +631,7 @@ class CameraManager(object):
         self._recording = False
         self._camera_transforms = [
             carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15)),
-            carla.Transform(carla.Location(x=1.6, z=1.7))]
+            carla.Transform(carla.Location(x=6, y=-2, z=1.7), carla.Rotation(yaw=160))]
         self._transform_index = 1
         self._sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB'],

@@ -75,11 +75,7 @@ void ATheNewCarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
 
-  GameInstance->StartServer();
-
-  Episode->WorldObserver = World->SpawnActor<AWorldObserver>();
-  Episode->WorldObserver->SetEpisode(*Episode);
-  Episode->WorldObserver->SetStream(GameInstance->GetServer().OpenMultiStream());
+  GameInstance->NotifyInitGame();
 
   SpawnActorFactories();
 }
@@ -106,13 +102,6 @@ void ATheNewCarlaGameModeBase::BeginPlay()
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
-}
-
-void ATheNewCarlaGameModeBase::Tick(float DeltaSeconds)
-{
-  Super::Tick(DeltaSeconds);
-
-  GameInstance->Tick(DeltaSeconds);
 }
 
 void ATheNewCarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

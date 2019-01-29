@@ -55,7 +55,8 @@ public:
 
   FPimpl(uint16_t port)
     : Server(port),
-      StreamingServer(port + 1u)
+      StreamingServer(port + 1u),
+      BroadcastStream(StreamingServer.MakeMultiStream())
   {
     BindActions();
   }
@@ -63,6 +64,8 @@ public:
   carla::rpc::Server Server;
 
   carla::streaming::Server StreamingServer;
+
+  carla::streaming::MultiStream BroadcastStream;
 
   UCarlaEpisode *Episode = nullptr;
 
@@ -111,15 +114,10 @@ void FTheNewCarlaServer::FPimpl::BindActions()
   Server.BindSync("get_episode_info", [this]() -> R<cr::EpisodeInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    auto WorldObserver = Episode->GetWorldObserver();
-    if (WorldObserver == nullptr)
-    {
-      RESPOND_ERROR("internal error: missing world observer");
-    }
     return cr::EpisodeInfo{
       Episode->GetId(),
       cr::FromFString(Episode->GetMapName()),
-      WorldObserver->GetToken()};
+      BroadcastStream.token()};
   });
 
   Server.BindSync("get_map_info", [this]() -> R<cr::MapInfo>
@@ -576,10 +574,11 @@ FTheNewCarlaServer::FTheNewCarlaServer() : Pimpl(nullptr) {}
 
 FTheNewCarlaServer::~FTheNewCarlaServer() {}
 
-void FTheNewCarlaServer::Start(uint16_t Port)
+FDataMultiStream FTheNewCarlaServer::Start(uint16_t Port)
 {
   UE_LOG(LogCarlaServer, Log, TEXT("Initializing rpc-server at port %d"), Port);
   Pimpl = MakeUnique<FPimpl>(Port);
+  return Pimpl->BroadcastStream;
 }
 
 void FTheNewCarlaServer::NotifyBeginEpisode(UCarlaEpisode &Episode)
@@ -620,10 +619,4 @@ FDataStream FTheNewCarlaServer::OpenStream() const
 {
   check(Pimpl != nullptr);
   return Pimpl->StreamingServer.MakeStream();
-}
-
-FDataMultiStream FTheNewCarlaServer::OpenMultiStream() const
-{
-  check(Pimpl != nullptr);
-  return Pimpl->StreamingServer.MakeMultiStream();
 }

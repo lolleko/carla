@@ -17,7 +17,7 @@
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <compiler/enable-ue4-macros.h>
 
-static auto AWorldObserver_GetActorState(const FActorView &View, const FActorRegistry &Registry)
+static auto FWorldObserver_GetActorState(const FActorView &View, const FActorRegistry &Registry)
 {
   using AType = FActorView::ActorType;
 
@@ -77,7 +77,7 @@ static auto AWorldObserver_GetActorState(const FActorView &View, const FActorReg
   return state;
 }
 
-static carla::Buffer AWorldObserver_Serialize(
+static carla::Buffer FWorldObserver_Serialize(
     carla::Buffer buffer,
     double game_timestamp,
     double platform_timestamp,
@@ -116,7 +116,7 @@ static carla::Buffer AWorldObserver_Serialize(
       View.GetActor()->GetActorTransform(),
       carla::geom::Vector3D{velocity.X, velocity.Y, velocity.Z},
       carla::geom::Vector3D{angularVelocity.X, angularVelocity.Y, angularVelocity.Z},
-      AWorldObserver_GetActorState(View, Registry)
+      FWorldObserver_GetActorState(View, Registry)
     };
     write_data(info);
   }
@@ -125,26 +125,14 @@ static carla::Buffer AWorldObserver_Serialize(
   return buffer;
 }
 
-AWorldObserver::AWorldObserver(const FObjectInitializer &ObjectInitializer)
-  : Super(ObjectInitializer)
+void FWorldObserver::BroadcastTick(const UCarlaEpisode &Episode)
 {
-  PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.TickGroup = TG_PrePhysics;
-}
-
-void AWorldObserver::Tick(float DeltaSeconds)
-{
-  check(Episode != nullptr);
-  Super::Tick(DeltaSeconds);
-
-  GameTimeStamp += DeltaSeconds;
-
   auto AsyncStream = Stream.MakeAsyncDataStream(*this);
 
-  auto buffer = AWorldObserver_Serialize(
+  auto buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
-      GameTimeStamp,
+      Episode.GetElapsedGameTime(),
       FPlatformTime::Seconds(),
-      Episode->GetActorRegistry());
+      Episode.GetActorRegistry());
   AsyncStream.Send(*this, std::move(buffer));
 }
